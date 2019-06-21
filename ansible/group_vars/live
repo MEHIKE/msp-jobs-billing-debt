@@ -1,0 +1,15 @@
+spring_profile: "live"
+#live_config_location: "./lib/application-live.properties"
+app_name_ci : "APP-TELIA-JOBSDEBT-LIVE"
+logging_path: /opt/app/webapp/log
+
+conf_opt_file: "application-live.properties"
+conf_opt_file_template: "application-live.properties"
+conf_opt_file_target: "{{conf_folder}}/{{conf_opt_file}}"
+
+#java_options: "-Xms1024m -Xmx1024m {{java_common_options}} -Dspring.config.location={{live_config_location}}"
+java_options: "-Xms1024m -Xmx1024m {{java_common_options}} {{app_options}}"
+
+conf_locations: "file:{{conf_folder}}/application.properties,file:{{conf_folder}}/application-live.properties"
+
+delete_conf: false

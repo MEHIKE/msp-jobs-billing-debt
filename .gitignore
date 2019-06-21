@@ -1,0 +1,34 @@
+# Eclipse
+.classpath
+.project
+.settings/
+*.log
+*.cmd
+
+# Intellij
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Mac
+.DS_Store
+
+# Maven
+pom.xml
+log/
+target/
+out/
+build/
+.gradle/
+.gradletasknamecache
+/bin
+mem.h2.db
+/bin/
+
+# ansible
+application.pid
+application.port
+application.deploytime
+application.version
+classes/

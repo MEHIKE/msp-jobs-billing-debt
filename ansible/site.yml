@@ -1,0 +1,7 @@
+---
+- hosts: nodes
+  gather_facts: yes
+  serial: 1
+  roles:
+     - {role: java, when: ansible_system == 'Linux' }
+     - msp

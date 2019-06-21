@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<included>
+  <property resource="application.properties"/>
+  <property name="syslog_host" value="127.0.0.1"/>
+  <property name="syslog_port" value="514"/>
+
+  <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+  <conversionRule conversionWord="wex"
+                  converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
+
+  <property name="CONSOLE_LOG_PATTERN"
+            value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %highlight(%-5p) %clr(${PID:- }){magenta} %clr([%marker]){faint} %clr([%15.15t{14}]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wex"/>
+  <property name="FILE_LOG_PATTERN"
+            value="%d{yyyy-MM-dd HH:mm:ss.SSS}|%5p|${PID:- }|[%marker]|[%t]|[%mdc{RequestId}]|---|%-40.40logger{59} : %m%n%wex"/>
+
+  <appender name="DEBUG_LEVEL_REMAPPER" class="org.springframework.boot.logging.logback.LevelRemappingAppender">
+    <destinationLogger>org.springframework.boot</destinationLogger>
+  </appender>
+
+  <!--property name="GENERIC_LOG_FILE" value="${logging.file:-${logging.path:-./}/${spring.application.name}}"/-->
+  <property name="GENERIC_LOG_FILE" value="${logging.path:-./}/${spring.application.name}"/>
+
+  <property name="JOB_MODULE_LOG_FILE" value="${GENERIC_LOG_FILE}-${JobName}.log"/>
+  <property name="GENERAL_LOG_FILE" value="${GENERIC_LOG_FILE}.log"/>
+
+  <!--if condition='!isDefined("logging.path")'>
+    <then-->
+      <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+          <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+          <charset>utf8</charset>
+        </encoder>
+      </appender>
+
+      <root>
+        <appender-ref ref="CONSOLE"/>
+      </root>
+    <!--/then>
+    <else-->
+  <!--discriminator>
+    <key>JobName</key>
+    <defaultValue>UNKNOWN</defaultValue>
+  </discriminator-->
+
+      <appender name="JOB-SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator>
+          <key>JobName</key>
+          <defaultValue>default</defaultValue>
+        </discriminator>
+
+        <!--discriminator class="ee.telia.msp.billing.jobs.common.config.ThreadNameBasedDiscriminator"/-->
+        <sift>
+          <!--if condition='property("JobName").equalsIgnoreCase("default")'-->
+          <!--if condition='${JobName}.equalsIgnoreCase("default")'>
+          <then-->
+          <!--turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
+                    <Name>CONFIDENTIAL_FILTER</Name>
+                    <Marker></Marker>
+                    <OnMatch>DENY</OnMatch>
+          </turboFilter-->
+          <appender name="JOB-${JobName}-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+              <!--file>${JOB_MODULE_LOG_FILE}</file-->
+            <!--filter class="ch.qos.logback.core.filter.EvaluatorFilter">      
+              <evaluator>
+                  <expression>
+                if(mdc == null || mdc.get("JobName") == null) || "".equals((String) mdc.get("JobName"))
+                      return false;
+                else
+                  return true;
+                if (marker == null  )
+                  return false;
+              </expression>
+              </evaluator>
+              <OnMismatch>DENY</OnMismatch>
+              <OnMatch>ACCEPT</OnMatch>
+            </filter-->
+
+              <file>${logging.path:-./}/${spring.application.name}-${JobName}.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+              <fileNamePattern>${JOB_MODULE_LOG_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+              <maxHistory>${logging.maxhistory:-168}</maxHistory>
+              <!--maxHistory>15</maxHistory>
+              <maxFileSize>10MB</maxFileSize>
+              <totalSizeCap>5GB</totalSizeCap-->
+            </rollingPolicy>
+
+            <encoder>
+              <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}|%5p|${PID:- }|[%marker]|[${JobName}]|[%t]|[%mdc{RequestId}]|%-40.40logger{59}.%M : %m%n%wex</pattern>
+              <!--pattern>${FILE_LOG_PATTERN}</pattern-->
+            </encoder>
+          </appender>
+          <!--/then>
+          </if-->
+        </sift>
+      </appender>
+
+      <appender name="GENERAL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${GENERAL_LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+          <fileNamePattern>${GENERAL_LOG_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+          <maxHistory>${logging.maxhistory:-168}</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+          <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+      </appender>
+
+  <!--statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />  
+  <appender name="SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator class="ch.qos.logback.classic.sift.JNDIBasedContextDiscriminator">
+          <defaultValue>unknown</defaultValue>
+        </discriminator>
+        <sift>
+          <appender name="FILE-${contextName}" class="ch.qos.logback.core.FileAppender">
+            <file>${logging.path:-./}/${contextName}.log</file>
+            <prudent>true</prudent>
+            <encoder>
+              <pattern>%-50(%level %logger{35}) cn=%contextName - %msg%n</pattern>
+             </encoder>
+          </appender>
+         </sift>
+        </appender-->
+
+  <root>
+        <appender-ref ref="GENERAL_FILE"/>
+        <!--appender-ref ref="JOB-${JobName}-APPENDER"/-->
+        <appender-ref ref="JOB-SIFT"/>
+        <!--appender-ref ref="SIFT"/-->
+      </root>
+    <!--/else>
+  </if-->
+
+
+  <logger name="org.apache.catalina.startup.DigesterFactory" level="ERROR"/>
+  <logger name="org.apache.catalina.util.LifecycleBase" level="ERROR"/>
+  <logger name="org.apache.coyote.http11.Http11NioProtocol" level="WARN"/>
+  <logger name="org.apache.sshd.common.util.SecurityUtils" level="WARN"/>
+  <logger name="org.apache.tomcat.util.net.NioSelectorPool" level="WARN"/>
+  <logger name="org.apache.hadoop" level="DEBUG"/>
+  <logger name="org.crsh.plugin" level="WARN"/>
+  <logger name="org.crsh.ssh" level="WARN"/>
+  <logger name="org.eclipse.jetty.util.component.AbstractLifeCycle" level="ERROR"/>
+  <logger name="org.hibernate.validator.internal.util.Version" level="WARN"/>
+  <logger name="org.springframework.boot.actuate.autoconfigure.CrshAutoConfiguration" level="WARN"/>
+  <logger name="org.springframework.boot.actuate.endpoint.jmx" additivity="false">
+    <appender-ref ref="DEBUG_LEVEL_REMAPPER"/>
+  </logger>
+  <logger name="org.thymeleaf" additivity="false">
+    <appender-ref ref="DEBUG_LEVEL_REMAPPER"/>
+  </logger>
+
+</included>

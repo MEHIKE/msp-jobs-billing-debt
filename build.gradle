@@ -1,0 +1,101 @@
+buildscript {
+  //ext {    springBootVersion = '1.5.8.RELEASE'  }
+  repositories {
+    //maven {      url "https://plugins.gradle.org/m2/"    }
+    mavenLocal()
+    mavenCentral()
+    maven { url "http://patton.estpak.ee/artifactory/repo" }
+
+  }
+  dependencies {
+    //classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    classpath "ee.telekom.msp:msp-gradle-plugin:${mspVersion}"
+
+  }
+}
+
+apply plugin: 'msp-plugin'
+apply plugin: 'java'
+apply plugin: 'spring-boot'
+
+//apply plugin: 'eclipse'
+//apply plugin: 'org.springframework.boot'
+
+tasks.withType(JavaCompile) {
+  options.encoding = "UTF-8"
+}
+
+group = 'ee.telekom.msp'
+description = 'Billing-Debt-Jobs'
+version = ''
+sourceCompatibility = javaVersion
+targetCompatibility = javaVersion
+
+
+repositories {
+  mavenLocal()
+  jcenter()
+  mavenCentral()
+  maven { url "http://patton.estpak.ee/artifactory/repo" }
+}
+
+configurations {
+  providedRuntime
+  all*.exclude module: 'spring-boot-logging'
+}
+
+configurations {
+  //compile.exclude group: 'ch.qos.logback'
+  compile.exclude group: 'commons-logging'
+  jaxb
+}
+
+distZip.enabled = false
+distTar.enabled = false
+
+dependencies {
+  provided "org.projectlombok:lombok:1.16.2"
+
+  // MSP platform
+  compile(group: 'ee.telekom.msp', name: 'msp-server', version: mspVersion) {
+    exclude module: "postgresql"
+  }
+  compile(group: 'ee.telekom.msp', name: 'mod-cluster', version: mspVersion)
+  compile(group: 'ee.telekom.msp', name: 'mod-job', version: mspVersion)
+  //compile(group: 'ee.telekom.msp', name: 'mod-swagger', version: mspVersion)
+
+  // EMT old Job platform support
+  compile group: "ee.emt.xgate.mod_bus", name: "bus_client_interfaces", version:"14.1"
+  //compile group: "ee.emt.xgate.mod_krk_process", name: "krk_process_client_interfaces", version:"2.1"
+  compile group: "ee.emt.xgate.mod_krk_process", name: "krk_process_client_interfaces", version:"2.10"
+
+  //compile(group: 'com.caucho', name: 'hessian', version: '3.0.20')
+  compile(group: 'com.caucho', name: 'hessian', version: '3.1.5')
+  //compile group: "ee.emt", name: "configuration", version:"2.1"
+  compile group: "ee.emt", name: "configuration", version:"2.18"
+  compile group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: '1.2.3.RELEASE'
+  //compile group: 'com.oracle', name: 'ojdbc14', version:'10.2.0.1.0'
+  compile group: 'com.oracle', name: 'ojdbc14', version:'10.2.0.3.0'
+  compile group: 'commons-configuration', name: 'commons-configuration', version:'1.10'
+
+  // MSP test libraries
+  testCompile(group: 'ee.telekom.msp', name: 'mod-test', version: mspVersion)
+}
+
+sourceSets.main.java.srcDirs += 'src'
+sourceSets.main.output.resourcesDir = 'conf'
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '2.13'
+  //gradleVersion = '3.1'
+}
+
+//buildDir='s:/mehike/gradle/'
+
+// Build server zip distribution.
+task serverZip1(type: Zip, dependsOn: bootRepackage) {
+     baseName = 'msp-jobs-billing-debt'
+     from "$buildDir/msp-jobs-billing-debt"
+     into "${baseName}-${project.version}"
+ }
+

@@ -1,0 +1,43 @@
+## Download and unarchive java.zip into JAVA_HOME
+
+- name: Check if JAVA_HOME folder exists
+  stat: path={{JAVA_HOME}}
+  register: java_check
+
+- name: Log if JAVA_HOME does not exist
+  debug: msg="JAVA_HOME = {{JAVA_HOME}} exist, skipping java tasks"
+  when: java_check.stat.exists
+
+- name: Log if JAVA_HOME exist
+  debug: msg="JAVA_HOME = {{JAVA_HOME}} does not exist, downloading from {{java_package}}"
+  when: not java_check.stat.exists
+
+- name: Download Java
+  get_url: url={{java_package}} dest={{tmp_folder}}/
+  register: get_java
+  when: not java_check.stat.exists
+
+- name: Make java tmp folder
+  file: path="{{java_tmp_folder}}" state=directory
+  when: not java_check.stat.exists
+
+- name: Unarchive java
+  unarchive: src={{get_java.dest}} dest={{java_tmp_folder}}/ copy=no
+  register: unarhive_java
+  when: not java_check.stat.exists
+
+- name: Create JAVA_HOME dir
+  file: path={{JAVA_HOME}} state=directory
+
+- name: Move unpacked archive to JAVA_HOME
+  shell: mv {{java_tmp_folder}}/* {{JAVA_HOME}}/
+  when: not java_check.stat.exists
+
+- name: Remove empty dir
+  file: path={{java_tmp_folder}} state=absent
+  when: not java_check.stat.exists
+
+- name: Remove archive
+  file: path={{get_java.dest}} state=absent
+  when: not java_check.stat.exists
+

@@ -1,0 +1,15 @@
+spring_profile: "test"
+
+app_name_ci : "APP-TELIA-JOBSDEBT-TEST"
+logging_path: /opt/app/webapp/log
+
+java_options: "-Xms768m -Xmx768m {{java_common_options}}"
+
+conf_opt_file: "application-test.properties"
+conf_opt_file_template: "application-test.properties"
+conf_opt_file_target: "{{conf_folder}}/{{conf_opt_file}}"
+
+conf_locations: "file:{{conf_folder}}/application.properties,file:{{conf_folder}}/application-test.properties"
+app_options: " -Dspring.config.location={{conf_locations}} -Dspring.application.name={{app_name}}"
+
+delete_conf: true

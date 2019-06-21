@@ -1,0 +1,16 @@
+---
+  - name: Ensure log dir exists
+    file: path={{log_folder}} state=directory
+
+  - name: Start msp server
+    shell: "cd {{app_folder}} && nohup ./server.sh start"
+
+  - name: waiting .port file
+    wait_for: path={{portfile}} timeout=120
+
+  - name: find listening http port
+    shell: cat {{portfile}}
+    register: port
+
+  - name: wait for msp server startup
+    wait_for: port={{port.stdout}} delay=1

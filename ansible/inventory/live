@@ -1,0 +1,5 @@
+[nodes]
+edwin.estpak.ee ansible_ssh_user=webapp
+
+[live:children]
+nodes

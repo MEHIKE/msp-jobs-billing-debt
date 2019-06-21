@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+  <include resource="logback-base.xml"/>
+  <!--<include resource="logback-syslog.xml"/>-->
+
+  <logger name="ee.telekom.msp" level="DEBUG"/>
+
+  <root level="INFO">
+    <appender-ref ref="GENERAL_FILE"/>
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>

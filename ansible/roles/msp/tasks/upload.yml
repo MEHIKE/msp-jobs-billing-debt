@@ -1,0 +1,53 @@
+---
+  - name: Assures {{app_folder}} dir exists
+    file: path={{app_folder}} state=directory
+
+  - name: Assures {{lindorff_path}} dir exists
+    file: path={{lindorff_path}} state=directory
+
+  - name: Copy artifact into remote node
+    copy: src={{source_artifact}} dest={{target_artifact}}
+
+  - name: Copy server.sh template
+    template: src=server.sh.j2 dest={{app_folder}}/server.sh mode="u=rwx,g=r,o=r"
+
+  - name: Copy check_process.sh template
+    template: src=check_process.sh.j2 dest={{app_folder}}/check_process.sh mode="u=rwx,g=r,o=r"
+
+  - name: Assures {{conf_folder}} dir exists
+    file: path={{conf_folder}} state=directory
+
+  - name: Ansible delete file {{conf_file_target}}
+    file: path={{conf_file_target}} state=absent
+    when: delete_conf
+    #when: spring_profile == "test"
+
+  - name: Ansible delete file {{conf_opt_file_target}}
+    file: path={{conf_opt_file_target}} state=absent
+    when: delete_conf
+
+  - name: Copy application.properties template
+    #copy: src=templates/{{conf_file_template}} dest={{conf_file_target}} mode="u=rw,g=r,o=r" backup=yes
+    template: src={{conf_file_template}} dest={{conf_file_target}} mode="u=rw,g=r,o=r" backup=yes
+    when: delete_conf
+    #template: src={{conf_file_template}} dest={{conf_file_target}} mode="u=rw,g=r,o=r"
+
+  - name: Copy appclication-{{spring_profile}}.properties template
+    #copy: src=templates/{{conf_opt_file_template}} dest={{conf_opt_file_target}} mode="u=rw,g=r,o=r" backup=yes
+    template: src={{conf_opt_file_template}} dest={{conf_opt_file_target}} mode="u=rw,g=r,o=r" backup=yes
+    when: delete_conf
+
+  - name: Copy lindorff.sh template
+    #copy: src=templates/{{conf_opt_file_template}} dest={{conf_opt_file_target}} mode="u=rw,g=r,o=r" backup=yes
+    template: src={{lindorff_template}} dest={{lindorff_target}} mode="u=rwx,g=r,o=r" backup=no
+
+  - name: Copy remindercloseaccounts.sh template
+    #copy: src=templates/{{conf_opt_file_template}} dest={{conf_opt_file_target}} mode="u=rw,g=r,o=r" backup=yes
+    template: src={{reminder_template}} dest={{reminder_target}} mode="u=rwx,g=r,o=r" backup=no
+
+  - name: Add crontab entry 'check_process_debt'
+    cron:
+     name: check_process_debt
+     job: "{{app_folder}}/check_process.sh >>{{log_folder}}/{{app_name}}-checkprocess.log"
+     minute: "*/5"
+     state: present

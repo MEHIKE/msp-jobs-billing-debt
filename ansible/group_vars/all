@@ -1,0 +1,66 @@
+## Application name
+app_name : "msp-jobs-billing-debt"
+app_name_ci : "APP-TELIA-JOBSDEBT"
+logging_path: /opt/app/webapp/log
+server_port: 9204
+
+## Home directory
+home_folder : "/opt/app/webapp"
+
+## Tmp folder
+tmp_folder : "/tmp"
+java_tmp_folder : "{{tmp_folder}}/{{java_version}}"
+
+## Logs location
+log_folder : "{{home_folder}}/log"
+
+## Application home folder
+app_folder : "{{home_folder}}/{{app_name}}"
+
+## Logs location
+##log_folder : "{{app_folder}}/log"
+
+## conf folder
+conf_folder: "{{app_folder}}/conf"
+
+conf_locations: "file:{{conf_folder}}/application.properties"
+
+conf_file: "application.properties"
+conf_file_template: "application.properties"
+conf_file_target: "{{conf_folder}}/{{conf_file}}"
+delete_conf: false
+
+conf_opt_file: "application-test.properties"
+conf_opt_file_template: "application-test.properties"
+conf_opt_file_target: "{{conf_folder}}/{{conf_opt_file}}"
+
+## copy lindorff.sh file
+lindorff_file: "startLindorff.sh"
+lindorff_template: "{{lindorff_file}}"
+lindorff_target: "{{app_folder}}/{{lindorff_file}}"
+
+## copy remindercloseaccounts.sh file
+reminder_file: "startReminderCloseAccounts.sh"
+reminder_template: "{{reminder_file}}"
+reminder_target: "{{app_folder}}/{{reminder_file}}"
+
+## Spring profile to use, generally environment-specific
+spring_profile : ""
+
+## Artifact name
+artifact: "{{app_name}}.jar"
+source_artifact: "../build/{{app_name}}.jar"
+target_artifact: "{{app_folder}}/{{app_name}}.jar"
+pidfile: "{{app_folder}}/application.pid"
+portfile: "{{app_folder}}/application.port"
+
+## Java related config
+java_version : "1.8.0_131"
+java_package : "http://patton.estpak.ee/artifactory/ext-release-local/com/openjdk/openjdk-{{java_version}}.tar.gz"
+JAVA_HOME: "{{home_folder}}/jvm/openjdk-{{java_version}}"
+
+java_common_options : "-Dserver.tomcat.max-http-header-size=16384 -Dfile.encoding=UTF-8 -Duser.language=en -Duser.country=US -Duser.variant="
+
+app_options: " -Dspring.config.location={{conf_locations}} -Dspring.application.name={{app_name}}"
+
+lindorff_path: "/home/webapp/webapp/lindorff"

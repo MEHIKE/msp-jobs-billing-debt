@@ -1,0 +1,24 @@
+#!/bin/bash
+
+cd {{app_folder}}
+
+if [ ! -f {{app_folder}}/application.startcount ]
+ then
+  echo 0 >application.startcount
+fi
+
+PID=$({{app_folder}}/server.sh pid)
+count=$(cat {{app_folder}}/application.startcount)
+
+if [ $PID -eq -1 ] && [ $count -le 10 ]
+ then
+
+   echo "$(date +\%Y-\%m-\%d) $(date +%T) `./server.sh start`"
+   echo $((count+1)) >application.startcount
+
+ elif [ $PID -ne -1 ]
+   then
+
+     echo 0 >application.startcount
+
+fi

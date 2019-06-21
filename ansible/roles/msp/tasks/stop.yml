@@ -1,0 +1,19 @@
+---
+  - name: Remove 'check_process_debt' crontab job
+    cron:
+     name: check_process_debt
+     state: absent
+
+  - name: find existing PID
+    shell: cat {{pidfile}}
+    register: pid
+    ignore_errors: True
+
+  - name: Kill existing process, if exists
+    shell: kill {{pid.stdout}}
+    when: pid.stdout
+
+  - name: waiting .port file disappears
+    wait_for: path={{portfile}} timeout=30 state=absent
+    when: pid.stdout
+

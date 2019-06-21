@@ -1,0 +1,5 @@
+[nodes]
+edmonia.estpak.ee ansible_ssh_user=webapp
+
+[test:children]
+nodes

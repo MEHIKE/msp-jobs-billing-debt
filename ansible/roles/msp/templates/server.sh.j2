@@ -1,0 +1,215 @@
+#!/bin/bash
+
+# Declare globally used variables #
+
+JAVA_HOME={{JAVA_HOME}}
+LOG_PATH={{log_folder}}
+LOG_FILE="{{log_folder}}/{{app_name}}"
+
+BASEDIR=$(dirname $0)
+MSP_ROOT=${BASEDIR}
+pushd $MSP_ROOT > /dev/null
+MSP_ROOT=`pwd -P`
+popd > /dev/null
+
+JAR_NAME="{{artifact}}"
+APP_NAME="{{app_name}}"
+PROFILE="{{spring_profile}}"
+SPRING_CONF="{{app_options}}"
+
+JAVA_OPTIONS="{{java_options}}"
+JAVA_CMD=$JAVA_HOME/bin/java
+
+PID_FILE={{pidfile}}
+
+
+
+###############################################################################
+#
+# Function Name : usage()
+# Arguments     : N/A
+# Return Result : N/A, exit 0
+#
+###############################################################################
+usage() 
+{
+  echo ""
+  echo "   Usage:  server.sh [-bf]  start|stop|status|pid"
+  echo ""    
+  echo "     -h : usage help"
+  echo "     -f : run in foreground (Ctl-C to stop)"
+  echo ""
+  exit 0
+}
+
+###############################################################################
+#
+# Function Name : start()
+# Arguments     : N/A
+# Return Result : N/A
+#
+###############################################################################
+start()
+{
+  # check if process is alreading running
+  if [ $(pid_status) -eq 0 ]
+  then
+    status
+    exit 0
+  fi
+
+  if [ -n "$OPT_RUN" ] && [ "$OPT_RUN" = "true" ] 
+  then
+    # Start in foreground (Ctl-C to stop) or background depending on OPT_RUN
+    # Echo start options
+    echo "****************************************************"
+    echo "Starting $APP_NAME in foreground (Ctl-C to quit):   "
+    echo "$JAVA_CMD -Dlogging.path=$LOG_PATH -Dlogging.file=$LOG_FILE -Dspring.profiles.active=$PROFILE $JAVA_OPTIONS -jar $MSP_ROOT/$JAR_NAME "
+    echo "****************************************************"
+    echo ""
+    exec $JAVA_CMD -Dlogging.path=$LOG_PATH -Dlogging.file=$LOG_FILE -Dspring.profiles.active=$PROFILE $JAVA_OPTIONS $SPRING_CONF -jar $MSP_ROOT/$JAR_NAME
+  else
+      echo `date "+%Y/%m/%d %H:%M:%S"`"     INFO [$APP_NAME] Start:" >> $LOG_PATH/$APP_NAME.out
+      exec $JAVA_CMD -Dlogging.path=$LOG_PATH -Dlogging.file=$LOG_FILE -Dspring.profiles.active=$PROFILE $JAVA_OPTIONS $SPRING_CONF -jar $MSP_ROOT/$JAR_NAME >> $LOG_PATH/${APP_NAME}.out 2>&1 &
+      #echo $! > $PID_FILE
+      echo "Started $APP_NAME - PID [$!]"
+  fi
+	
+}
+
+###############################################################################
+#
+# Function Name : stop()
+# Arguments     : N/A
+# Return Result : N/A
+#
+###############################################################################
+stop()
+{
+  # check that process exists
+  if [ $(pid_status) -ne 0 ]
+  then
+    status
+    exit 0
+  fi
+
+  # Send a kill (with an optional -9 signal) to the process
+  kill $OPT_FORCEKILL `cat $PID_FILE`
+
+  echo "Stopping $APP_NAME - PID [`cat $PID_FILE`]"
+  pid=`cat $PID_FILE`
+  while kill -0 "$pid" >/dev/null 2>&1; do
+            sleep 0.5
+  done
+}
+
+##############################################################################
+#
+# Function Name : status()
+# Arguments     : N/A
+# Return Result : N/A
+#
+###############################################################################
+status()
+{
+
+  STATUS=-1
+  case $(pid_status) in
+    -1) echo "Status: PID file [$PID_FILE] not found !!!"
+        STATUS=-1
+         ;;
+     0) echo "Status: $APP_NAME running - PID [`cat $PID_FILE`]"
+        STATUS=0
+         ;;
+     1) echo "Status: $APP_NAME not running - PID [`cat $PID_FILE`] not found."
+        STATUS=1
+         ;;
+  esac
+
+  return -- $STATUS
+}
+
+
+get_pid()
+{
+  if [ ! -f $PID_FILE ]
+  then
+    echo -1
+  else
+    PID=`cat $PID_FILE`
+    PS_STAT=`ps -p $PID -o'user,pid=' | tail -1 | awk '{print $2}'`
+
+    case "$PS_STAT" in
+      $PID  ) echo $PID
+              ;;
+      *     ) echo 0
+              ;;
+    esac
+  fi
+
+  return 0
+}
+
+###############################################################################
+#
+# Function Name : pid_status()
+# Arguments     : N/A
+# Return Result : -1 - PID file not found (not running),
+#                  0 - PID found (running), 
+#                  1 - PID not found (not running)
+#
+###############################################################################
+pid_status()
+{
+  case $(get_pid) in
+   -1   ) echo -1
+          ;;
+    0   ) echo 1
+          ;;
+    *   ) echo 0
+          ;;
+  esac
+
+  return 0
+}
+
+
+# get script options
+while getopts "hf" opt ; do
+  case $opt in
+    h  ) usage
+         exit 0
+         ;;
+    f  ) OPT_RUN=true
+         ;;
+    \? ) usage
+         exit 1
+         ;;
+  esac
+done
+
+
+# correct the index so the command argument is always $1
+shift $(($OPTIND - 1))
+
+case "$1" in
+   start)
+      start
+   ;;
+   stop)
+      stop
+   ;;
+   restart)
+      restart
+   ;;
+   status)
+      status
+      exit $?
+   ;;
+   pid)
+      get_pid
+   ;;
+   *)
+      usage
+      exit 1
+esac
